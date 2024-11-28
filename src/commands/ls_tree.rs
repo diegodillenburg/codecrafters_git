@@ -1,4 +1,5 @@
 use std::fs;
+use crate::utils::Path;
 use crate::zlib;
 
 pub struct TreeObject {
@@ -22,7 +23,8 @@ impl TreeObject {
 }
 
 pub fn ls_tree(name_only: bool, object_hash: String) {
-    let path = format!(".git/objects/{}/{}", &object_hash[0..2], &object_hash[2..]);
+    let path = Path::build(Some("objects".to_string()), Some(object_hash));
+    let path = path.build_path();
 
     let file = fs::read(path).unwrap();
     let body = zlib::decode_tree_obj(file);
