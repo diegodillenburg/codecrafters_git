@@ -3,6 +3,40 @@ use sha1::{Digest, Sha1};
 use std::fs;
 use std::io::{BufRead, BufReader, BufWriter, Read, Write};
 
+use crate::commands::ls_tree::TreeObject;
+
+pub fn decode_tree_obj(input: Vec<u8>) -> Vec<TreeObject> {
+    let decoder = ZlibDecoder::new(&input[..]);
+    let mut reader = BufReader::new(decoder);
+    let mut header = Vec::new();
+    reader.read_until(0, &mut header).unwrap();
+
+    let mut tree_objects = Vec::new();
+
+    loop {
+        let mut entry = Vec::new();
+
+        if reader.read_until(0, &mut entry).unwrap() == 0 {
+            break; // EOF
+        }
+
+        let entry = String::from_utf8(entry).unwrap();
+        let parts: Vec<&str> = entry.splitn(2, ' ').collect();
+
+        let mode = parts[0].to_string();
+        let filename = parts[1].to_string();
+
+        let mut sha_bytes = [0; 20];
+        reader.read_exact(&mut sha_bytes).unwrap();
+
+        let sha = hex::encode(sha_bytes);
+
+        tree_objects.push(TreeObject::build(mode, filename, sha));
+    }
+
+    tree_objects
+}
+
 pub fn decode(input: Vec<u8>, head: &str) -> String {
     let decoder = ZlibDecoder::new(&input[..]);
     let mut reader = BufReader::new(decoder);
