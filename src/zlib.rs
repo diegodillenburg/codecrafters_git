@@ -20,8 +20,16 @@ pub fn decode_tree_obj(input: Vec<u8>) -> Vec<TreeObject> {
             break; // EOF
         }
 
+        if let  Some(&0) = entry.last() {
+            entry.pop();
+        }
+
         let entry = String::from_utf8(entry).unwrap();
         let parts: Vec<&str> = entry.splitn(2, ' ').collect();
+
+        if parts.len() < 2 {
+            continue;
+        }
 
         let mode = parts[0].to_string();
         let filename = parts[1].to_string();
